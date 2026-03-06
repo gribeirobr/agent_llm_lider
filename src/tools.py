@@ -7,6 +7,7 @@ from langchain_core.tools import tool
 from src.config import ARQUIVO_POLITICAS, DATA_DIR
 
 def criar_documento_ficticio():
+    """Garante que a pasta 'data' e o arquivo de teste existam."""
     os.makedirs(DATA_DIR, exist_ok=True)
     if not os.path.exists(ARQUIVO_POLITICAS):
         conteudo = """
@@ -27,8 +28,13 @@ def criar_documento_ficticio():
         with open(ARQUIVO_POLITICAS, "w", encoding="utf-8") as f:
             f.write(conteudo)
 
-# 1. AGORA A FUNÇÃO RECEBE A CHAVE
 def configurar_ferramenta_rag(api_key: str): 
+    # 1. Limpa a chave (remove espaços ocultos e aspas residuais)
+    chave_limpa = api_key.strip().strip("'").strip('"')
+    
+    # 2. Força a variável de ambiente (o Google exige isso nos bastidores)
+    os.environ["GOOGLE_API_KEY"] = chave_limpa
+    
     criar_documento_ficticio()
     
     loader = TextLoader(ARQUIVO_POLITICAS, encoding="utf-8")
@@ -37,10 +43,10 @@ def configurar_ferramenta_rag(api_key: str):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     splits = text_splitter.split_documents(docs)
     
-    # 2. PASSAMOS A CHAVE DIRETAMENTE AQUI
+    # 3. Usa o modelo mais recente e estável do Google para textos
     embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/embedding-001", 
-        google_api_key=api_key
+        model="models/text-embedding-004", 
+        google_api_key=chave_limpa
     )
     
     vectorstore = FAISS.from_documents(documents=splits, embedding=embeddings)
