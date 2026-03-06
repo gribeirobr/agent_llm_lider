@@ -12,7 +12,7 @@ def criar_grafo_agente(api_key: str):
     
     # 2. Passa a chave DIRETAMENTE para o LLM (O Cérebro)
     llm = ChatGoogleGenerativeAI(
-        model="gemini-flash-latest", 
+        model="gemini-2.5-flash", 
         temperature=0.2,
         google_api_key=api_key
     )
