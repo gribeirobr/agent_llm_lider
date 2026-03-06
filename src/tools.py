@@ -45,7 +45,7 @@ def configurar_ferramenta_rag(api_key: str):
     
     # 3. Usa o modelo mais recente e estável do Google para textos
     embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/embedding-001", 
+        model="models/gemini-embedding-001", 
         google_api_key=chave_limpa
     )
     
