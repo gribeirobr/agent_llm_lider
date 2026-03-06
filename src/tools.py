@@ -3,7 +3,7 @@ from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.tools.retriever import create_retriever_tool
+from langchain_core.tools import tool # <-- Usaremos isso no lugar da função pronta
 from src.config import ARQUIVO_POLITICAS, DATA_DIR
 
 def criar_documento_ficticio():
@@ -42,10 +42,16 @@ def configurar_ferramenta_rag():
     vectorstore = FAISS.from_documents(documents=splits, embedding=OpenAIEmbeddings())
     retriever = vectorstore.as_retriever()
     
-    tool_busca_rh = create_retriever_tool(
-        retriever,
-        "consultar_politicas_rh",
-        "Busca informações oficiais no Código de Conduta e manuais de RH da empresa. Use isso sempre que o líder perguntar sobre regras, demissões, assédio, horários ou processos formais."
-    )
+    # CRIANDO A FERRAMENTA MANUALMENTE (À PROVA DE FALHAS)
+    @tool
+    def consultar_politicas_rh(query: str) -> str:
+        """Busca informações oficiais no Código de Conduta e manuais de RH da empresa. 
+        Use isso sempre que o líder perguntar sobre regras, demissões, assédio, horários ou processos formais."""
+        
+        # O retriever busca os trechos mais relevantes
+        documentos = retriever.invoke(query)
+        
+        # Junta os textos encontrados e devolve para o Agente ler
+        return "\n\n".join([doc.page_content for doc in documentos])
     
-    return [tool_busca_rh]
+    return [consultar_politicas_rh]
