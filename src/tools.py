@@ -1,15 +1,13 @@
 import os
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import FAISS
-from langchain_google_genai import GoogleGenerativeAIEmbeddings # <-- GOOGLE AQUI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.tools import tool
 from src.config import ARQUIVO_POLITICAS, DATA_DIR
 
 def criar_documento_ficticio():
-    """Garante que a pasta 'data' e o arquivo de teste existam."""
     os.makedirs(DATA_DIR, exist_ok=True)
-    
     if not os.path.exists(ARQUIVO_POLITICAS):
         conteudo = """
         CÓDIGO DE CONDUTA E POLÍTICAS DE RH - EMPRESA EXEMPLO S/A
@@ -29,8 +27,8 @@ def criar_documento_ficticio():
         with open(ARQUIVO_POLITICAS, "w", encoding="utf-8") as f:
             f.write(conteudo)
 
-def configurar_ferramenta_rag():
-    """Cria a ferramenta de busca vetorial que o agente vai usar."""
+# 1. AGORA A FUNÇÃO RECEBE A CHAVE
+def configurar_ferramenta_rag(api_key: str): 
     criar_documento_ficticio()
     
     loader = TextLoader(ARQUIVO_POLITICAS, encoding="utf-8")
@@ -39,8 +37,12 @@ def configurar_ferramenta_rag():
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     splits = text_splitter.split_documents(docs)
     
-    # <-- Usa o modelo gratuito de embeddings do Google
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    # 2. PASSAMOS A CHAVE DIRETAMENTE AQUI
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model="models/embedding-001", 
+        google_api_key=api_key
+    )
+    
     vectorstore = FAISS.from_documents(documents=splits, embedding=embeddings)
     retriever = vectorstore.as_retriever()
     
